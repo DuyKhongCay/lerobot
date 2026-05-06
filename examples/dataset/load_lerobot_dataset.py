@@ -36,9 +36,9 @@ from lerobot.datasets import LeRobotDataset, LeRobotDatasetMetadata
 
 def main():
     # Browse datasets created/ported by the community on the hub using the hub api:
-    hub_api = HfApi()
-    repo_ids = [info.id for info in hub_api.list_datasets(task_categories="robotics", tags=["LeRobot"])]
-    pprint(repo_ids)
+    # hub_api = HfApi()
+    # repo_ids = [info.id for info in hub_api.list_datasets(filter="LeRobot")]
+    # pprint(repo_ids)
 
     # Or simply explore them in your web browser directly at:
     # https://huggingface.co/datasets?other=LeRobot
@@ -67,7 +67,7 @@ def main():
 
     # You can then load the actual dataset from the hub.
     # Either load any subset of episodes:
-    dataset = LeRobotDataset(repo_id, episodes=[0, 10, 11, 23])
+    dataset = LeRobotDataset(repo_id, episodes=[0])
 
     # And see how many frames you have:
     print(f"Selected episodes: {dataset.episodes}")
@@ -128,9 +128,13 @@ def main():
     print(f"{dataset[0]['observation.state'].shape=}")  # (6, c)
     print(f"{dataset[0]['action'].shape=}\n")  # (64, c)
 
+    # NOTE: num_workers must be 0 when using torchcodec for video decoding.
+    # torchcodec is not safe for multiprocessing: concurrent DataLoader workers
+    # will corrupt each other's video decoding state, causing:
+    # RuntimeError: Could not push packet to decoder: Invalid data found when processing input
     dataloader = torch.utils.data.DataLoader(
         dataset,
-        num_workers=4,
+        num_workers=0,
         batch_size=32,
         shuffle=True,
     )
