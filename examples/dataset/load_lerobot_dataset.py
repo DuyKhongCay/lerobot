@@ -37,7 +37,7 @@ from lerobot.datasets import LeRobotDataset, LeRobotDatasetMetadata
 def main():
     # Browse datasets created/ported by the community on the hub using the hub api:
     hub_api = HfApi()
-    repo_ids = [info.id for info in hub_api.list_datasets(task_categories="robotics", tags=["LeRobot"])]
+    repo_ids = [info.id for info in hub_api.list_datasets(task_categories="robotics", filter=["LeRobot"])]
     pprint(repo_ids)
 
     # Or simply explore them in your web browser directly at:
@@ -67,7 +67,7 @@ def main():
 
     # You can then load the actual dataset from the hub.
     # Either load any subset of episodes:
-    dataset = LeRobotDataset(repo_id, episodes=[0, 10, 11, 23])
+    dataset = LeRobotDataset(repo_id, episodes=[0])
 
     # And see how many frames you have:
     print(f"Selected episodes: {dataset.episodes}")

@@ -179,7 +179,7 @@ def _resolve_task_name(row: pd.Series, local_path: Path) -> str:
         tasks_parquet = local_path / "meta" / "tasks.parquet"
         if tasks_parquet.exists():
             tasks_df = pd.read_parquet(tasks_parquet)
-            task_idx = int(row.get("task_index", 0)) if "task_index" in row.index else 0
+            task_idx = int(row["task_index"]) if "task_index" in row.index else 0  # type: ignore[arg-type]
             match = tasks_df[tasks_df["task_index"] == task_idx]
             if not match.empty:
                 return str(match.index[0])
@@ -235,9 +235,9 @@ def load_progress_data(local_path: Path, episode: int) -> np.ndarray | None:
     if episode_df.empty:
         logging.warning("No sarm_progress rows for episode %d", episode)
         return None
-    episode_df = episode_df.sort_values("frame_index")
+    episode_df = episode_df.sort_values(by="frame_index")  # type: ignore[call-overload]
 
-    if "progress_dense" in episode_df.columns and episode_df["progress_dense"].notna().any():
+    if "progress_dense" in episode_df.columns and bool(episode_df["progress_dense"].notna().any()):
         progress_column = "progress_dense"
     elif "progress_sparse" in episode_df.columns:
         progress_column = "progress_sparse"
@@ -248,7 +248,7 @@ def load_progress_data(local_path: Path, episode: int) -> np.ndarray | None:
         progress_column = progress_columns[0]
 
     logging.info("   Using progress column: '%s'", progress_column)
-    return episode_df[["frame_index", progress_column]].rename(columns={progress_column: "progress"}).values
+    return episode_df[["frame_index", progress_column]].rename(columns={progress_column: "progress"}).values  # type: ignore[return-value]
 
 
 def _precompute_pixel_coords(
@@ -427,7 +427,7 @@ def composite_progress_video(
         progress_values = progress_data[:, 1].astype(float)
 
         logging.info("[3/4] Compositing %d frames ...", num_frames)
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter.fourcc(*"mp4v")  # type: ignore[attr-defined]
         writer = cv2.VideoWriter(str(output_path), fourcc, fps, (frame_width, frame_height))
 
         for frame_idx in range(num_frames):
