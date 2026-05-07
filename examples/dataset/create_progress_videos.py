@@ -22,11 +22,11 @@ of the source video, draws a progress line on each frame, and writes the result.
 
 Usage:
     python examples/dataset/create_progress_videos.py \
-        --repo-id lerobot-data-collection/level2_final_quality3 \
-        --episode 1100
+        --repo-id lerobot/high_quality_folding \
+        --episode 0
 
     python examples/dataset/create_progress_videos.py \
-        --repo-id lerobot-data-collection/level2_final_quality3 \
+        --repo-id lerobot/high_quality_folding \
         --episode 1100 \
         --camera-key observation.images.top \
         --output-dir ./my_videos \
@@ -238,6 +238,7 @@ def load_progress_data(local_path: Path, episode: int) -> np.ndarray | None:
     episode_df = episode_df.sort_values(by="frame_index")  # type: ignore[call-overload]
 
     if "progress_dense" in episode_df.columns and bool(episode_df["progress_dense"].notna().any()):
+    if "progress_dense" in episode_df.columns and bool(episode_df["progress_dense"].notna().any()):
         progress_column = "progress_dense"
     elif "progress_sparse" in episode_df.columns:
         progress_column = "progress_sparse"
@@ -335,7 +336,7 @@ def _alpha_composite_region(base: np.ndarray, overlay_bgra: np.ndarray, x_limit:
         return
     region_base = base[:, :x_limit]
     region_overlay = overlay_bgra[:, :x_limit]
-    alpha = region_overlay[:, :, 3:4].astype(np.float32) / 255.0
+    alpha = region_overlay[:, :, 3:4].astype(np.float32) / 255.0 # type: ignore
     region_base[:] = np.clip(
         region_overlay[:, :, :3].astype(np.float32) * alpha + region_base.astype(np.float32) * (1.0 - alpha),
         0,
@@ -390,12 +391,16 @@ def composite_progress_video(
     Returns:
         Path to the written output file (MP4).
     """
-    capture = cv2.VideoCapture(str(video_path))
+    import av
+    container = av.open(str(video_path))
     try:
-        capture.set(cv2.CAP_PROP_POS_MSEC, from_timestamp * 1000)
+        video_stream = container.streams.video[0]
+        if from_timestamp > 0:
+            target_pts = int(from_timestamp / float(video_stream.time_base)) # type: ignore
+            container.seek(target_pts, stream=video_stream)
 
-        frame_width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
-        frame_height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        frame_width = video_stream.codec_context.width
+        frame_height = video_stream.codec_context.height
         duration_seconds = to_timestamp - from_timestamp
         num_frames = int(round(duration_seconds * fps))
 
@@ -430,9 +435,12 @@ def composite_progress_video(
         fourcc = cv2.VideoWriter.fourcc(*"mp4v")  # type: ignore[attr-defined]
         writer = cv2.VideoWriter(str(output_path), fourcc, fps, (frame_width, frame_height))
 
+        frame_iter = container.decode(video=0)
         for frame_idx in range(num_frames):
-            ret, frame = capture.read()
-            if not ret:
+            try:
+                av_frame = next(frame_iter)
+                frame = av_frame.to_ndarray(format="bgr24")
+            except (StopIteration, av.error.EOFError):
                 break
 
             drawn_count = int(np.searchsorted(frame_indices, frame_idx, side="right"))
@@ -506,7 +514,7 @@ def composite_progress_video(
 
         writer.release()
     finally:
-        capture.release()
+        container.close()
 
     logging.info("   MP4 written: %s", output_path)
     return output_path
