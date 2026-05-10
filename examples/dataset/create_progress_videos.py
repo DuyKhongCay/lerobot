@@ -238,7 +238,6 @@ def load_progress_data(local_path: Path, episode: int) -> np.ndarray | None:
     episode_df = episode_df.sort_values(by="frame_index")  # type: ignore[call-overload]
 
     if "progress_dense" in episode_df.columns and bool(episode_df["progress_dense"].notna().any()):
-    if "progress_dense" in episode_df.columns and bool(episode_df["progress_dense"].notna().any()):
         progress_column = "progress_dense"
     elif "progress_sparse" in episode_df.columns:
         progress_column = "progress_sparse"
@@ -402,7 +401,7 @@ def composite_progress_video(
         frame_width = video_stream.codec_context.width
         frame_height = video_stream.codec_context.height
         duration_seconds = to_timestamp - from_timestamp
-        num_frames = int(round(duration_seconds * fps))
+        num_frames = round(duration_seconds * fps)
 
         logging.info(
             "   Video: %dx%d, %d frames @ %.1f fps (%.2fs)",
@@ -440,7 +439,7 @@ def composite_progress_video(
             try:
                 av_frame = next(frame_iter)
                 frame = av_frame.to_ndarray(format="bgr24")
-            except (StopIteration, av.error.EOFError):
+            except (StopIteration, av.error.EOFError): #type: ignore
                 break
 
             drawn_count = int(np.searchsorted(frame_indices, frame_idx, side="right"))

@@ -45,7 +45,7 @@ from datatrove.pipeline.base import PipelineStep
 
 class ComputeProgressShards(PipelineStep):
     """Each worker computes SARM progress for its assigned episodes."""
-
+    # Hàm khởi tạo class với các attribute cần thiết
     def __init__(
         self, repo_id, reward_model_path, stride=1, head_mode="sparse", device="cpu", shard_dir="rabc_shards"
     ):
