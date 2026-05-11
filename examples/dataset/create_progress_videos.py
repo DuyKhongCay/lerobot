@@ -238,7 +238,6 @@ def load_progress_data(local_path: Path, episode: int) -> np.ndarray | None:
     episode_df = episode_df.sort_values(by="frame_index")  # type: ignore[call-overload]
 
     if "progress_dense" in episode_df.columns and bool(episode_df["progress_dense"].notna().any()):
-    if "progress_dense" in episode_df.columns and bool(episode_df["progress_dense"].notna().any()):
         progress_column = "progress_dense"
     elif "progress_sparse" in episode_df.columns:
         progress_column = "progress_sparse"
