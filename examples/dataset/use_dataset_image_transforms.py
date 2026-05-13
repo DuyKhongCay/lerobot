@@ -30,12 +30,12 @@ from lerobot.datasets import LeRobotDataset
 from lerobot.transforms import ImageTransformConfig, ImageTransforms, ImageTransformsConfig
 
 
-def save_image(tensor, filename):
+def save_image(tensor, filename:str):
     """Helper function to save a tensor as an image file."""
     if tensor.dim() == 3:  # [C, H, W]
         if tensor.max() > 1.0:
             tensor = tensor / 255.0
-        tensor = torch.clamp(tensor, 0.0, 1.0)
+        tensor = tensor.clamp(0.0, 1.0)
         pil_image = to_pil_image(tensor)
         pil_image.save(filename)
         print(f"Saved: {filename}")
@@ -144,7 +144,7 @@ def example_3_torchvision_transforms():
             [
                 v2.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
                 v2.GaussianBlur(kernel_size=3, sigma=(0.1, 2.0)),
-                v2.RandomRotation(degrees=10),  # Small rotation
+                v2.RandomRotation(degrees=[-10, 10]),  # Small rotation
             ]
         )
 
