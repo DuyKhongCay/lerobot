@@ -71,7 +71,7 @@ class ReplayConfig:
     play_sounds: bool = True
 
 
-@draccus.wrap()
+@draccus.wrap()  # type: ignore[attr-defined]
 def replay(cfg: ReplayConfig):
     init_logging()
     logging.info(pformat(asdict(cfg)))
@@ -103,4 +103,4 @@ def replay(cfg: ReplayConfig):
 
 
 if __name__ == "__main__":
-    replay()
+    replay()  # type: ignore[call-arg]
